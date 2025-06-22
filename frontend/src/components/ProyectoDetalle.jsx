@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import PhotoUploader from './PhotoUploader'
 import AudioRecorder from './AudioRecorder'
 import InformePreview from './InformePreview'
-import { descargarInformePDF } from '../utils/pdfGenerator'
+// import { descargarInformePDF } from '../utils/pdfGenerator' // Used in InformePreview component
 
 const API_URL = 'http://localhost:3001/api'
 
@@ -15,11 +15,7 @@ function ProyectoDetalle({ proyecto, onVolver }) {
   const [mostrarInformePreview, setMostrarInformePreview] = useState(false)
   const [nuevaNota, setNuevaNota] = useState('')
 
-  useEffect(() => {
-    cargarRecursos()
-  }, [proyecto.id])
-
-  const cargarRecursos = async () => {
+  const cargarRecursos = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/proyectos/${proyecto.id}/recursos`)
       const data = await response.json()
@@ -29,7 +25,11 @@ function ProyectoDetalle({ proyecto, onVolver }) {
     } finally {
       setCargando(false)
     }
-  }
+  }, [proyecto.id])
+
+  useEffect(() => {
+    cargarRecursos()
+  }, [cargarRecursos])
 
   const guardarNotaTexto = async (e) => {
     e.preventDefault()
@@ -55,7 +55,7 @@ function ProyectoDetalle({ proyecto, onVolver }) {
     }
   }
 
-  const subirArchivo = async (file, descripcion, tipo = null) => {
+  const subirArchivo = async (file, descripcion) => {
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -83,10 +83,11 @@ function ProyectoDetalle({ proyecto, onVolver }) {
   }
 
   const handleSavePhoto = async (file, descripcion) => {
-    const success = await subirArchivo(file, descripcion, 'foto')
-    if (success) {
-      setMostrarPhotoUploader(false)
+    const success = await subirArchivo(file, descripcion)
+    if (!success) {
+      throw new Error('Error uploading photo')
     }
+    return success
   }
 
   const handleSaveAudio = async (audioBlob, descripcion) => {
@@ -103,6 +104,28 @@ function ProyectoDetalle({ proyecto, onVolver }) {
 
   const generarInforme = () => {
     setMostrarInformePreview(true)
+  }
+
+  const eliminarRecurso = async (recurso) => {
+    if (!confirm(`¿Estás seguro de eliminar este ${recurso.tipo.replace('_', ' ')}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/recursos/${recurso.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await cargarRecursos()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error eliminando recurso')
+      }
+    } catch (error) {
+      console.error('Error eliminando recurso:', error)
+      alert('Error eliminando recurso')
+    }
   }
 
   const formatearFecha = (fecha) => {
@@ -307,9 +330,18 @@ function ProyectoDetalle({ proyecto, onVolver }) {
             {recursos.map(recurso => (
               <div key={recurso.id} className="recurso-card">
                 <div className="recurso-header">
-                  <span className="recurso-icono">{getIconoTipo(recurso.tipo)}</span>
-                  <span className="recurso-tipo">{recurso.tipo.replace('_', ' ')}</span>
-                  <span className="recurso-fecha">{formatearFecha(recurso.fecha_creacion)}</span>
+                  <div className="recurso-info">
+                    <span className="recurso-icono">{getIconoTipo(recurso.tipo)}</span>
+                    <span className="recurso-tipo">{recurso.tipo.replace('_', ' ')}</span>
+                    <span className="recurso-fecha">{formatearFecha(recurso.fecha_creacion)}</span>
+                  </div>
+                  <button 
+                    className="btn btn-sm btn-delete" 
+                    onClick={() => eliminarRecurso(recurso)}
+                    title="Eliminar recurso"
+                  >
+                    🗑️
+                  </button>
                 </div>
                 
                 <div className="recurso-content">

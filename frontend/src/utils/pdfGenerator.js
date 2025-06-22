@@ -11,6 +11,44 @@ export const generarInformePDF = async (proyecto, recursos) => {
   // Configurar fuentes
   doc.setFont('helvetica', 'normal')
 
+  // Función auxiliar para cargar imagen como base64 con redimensionado
+  const loadImageAsBase64 = (url, maxWidth = 800, maxHeight = 600) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        // Calcular nuevas dimensiones manteniendo proporción
+        let { width, height } = img
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+        
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height
+          height = maxHeight
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        try {
+          const dataURL = canvas.toDataURL('image/jpeg', 0.8)
+          resolve({ dataURL, width, height })
+        } catch (error) {
+          reject(error)
+        }
+      }
+      img.onerror = reject
+      img.src = url
+    })
+  }
+
   // Función auxiliar para agregar texto con salto de línea automático
   const addText = (text, fontSize = 12, style = 'normal', maxWidth = contentWidth) => {
     doc.setFontSize(fontSize)
@@ -131,8 +169,9 @@ export const generarInformePDF = async (proyecto, recursos) => {
       addText('Registro Fotográfico:', 14, 'bold')
       addSpace(10)
 
-      fotos.forEach((foto, index) => {
-        checkNewPage(80)
+      for (let index = 0; index < fotos.length; index++) {
+        const foto = fotos[index]
+        checkNewPage(120) // Más espacio para imagen
         
         const fecha = new Date(foto.fecha_creacion).toLocaleDateString('es-ES')
         addText(`Fotografía ${index + 1} - ${fecha}`, 12, 'bold')
@@ -141,10 +180,49 @@ export const generarInformePDF = async (proyecto, recursos) => {
           addText(foto.descripcion, 11, 'normal')
         }
         
-        // Espacio para la imagen (placeholder)
-        addText('[IMAGEN: Se incluirá en versión final del informe]', 10, 'italic')
-        addSpace(15)
-      })
+        addSpace(5)
+        
+        try {
+          // Construir URL completa de la imagen
+          const imageUrl = `http://localhost:3001/uploads/${foto.archivo_path}`
+          const { dataURL, width, height } = await loadImageAsBase64(imageUrl)
+          
+          // Calcular dimensiones para el PDF (convertir de px a mm)
+          const maxWidthMM = contentWidth * 0.8
+          const maxHeightMM = 80
+          
+          // Mantener proporción de la imagen
+          let finalWidth = (width * 0.264583) // px to mm conversion
+          let finalHeight = (height * 0.264583)
+          
+          if (finalWidth > maxWidthMM) {
+            finalHeight = (finalHeight * maxWidthMM) / finalWidth
+            finalWidth = maxWidthMM
+          }
+          
+          if (finalHeight > maxHeightMM) {
+            finalWidth = (finalWidth * maxHeightMM) / finalHeight
+            finalHeight = maxHeightMM
+          }
+          
+          // Centrar imagen horizontalmente
+          const xPosition = margin + (contentWidth - finalWidth) / 2
+          
+          // Verificar si hay espacio suficiente
+          checkNewPage(finalHeight + 20)
+          
+          // Agregar imagen al PDF
+          doc.addImage(dataURL, 'JPEG', xPosition, currentY, finalWidth, finalHeight)
+          currentY += finalHeight + 10
+          
+        } catch (error) {
+          console.warn(`No se pudo cargar imagen: ${foto.archivo_path}`, error)
+          addText('[IMAGEN: Error al cargar la imagen]', 10, 'italic')
+          addSpace(5)
+        }
+        
+        addSpace(10)
+      }
     }
 
     // GRABACIONES DE AUDIO

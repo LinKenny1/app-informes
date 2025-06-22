@@ -15,7 +15,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "jspdf": "^3.0.1",
     "multer": "^2.0.1",
     "sql.js": "^1.13.0"
   },

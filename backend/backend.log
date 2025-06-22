@@ -1,0 +1,16 @@
+
+> backend@1.0.0 start
+> node server.js
+
+Servidor ejecutándose en puerto 3001
+API disponible en http://localhost:3001/api
+Base de datos inicializada correctamente
+/home/linkenny/projects/app-informes/backend/database.js:220
+              this.db.run('COMMIT');
+                      ^
+
+TypeError: Cannot read properties of undefined (reading 'run')
+    at Statement.<anonymous> (/home/linkenny/projects/app-informes/backend/database.js:220:23)
+    at Statement.replacement (/home/linkenny/projects/app-informes/backend/node_modules/sqlite3/lib/trace.js:25:27)
+
+Node.js v22.16.0
