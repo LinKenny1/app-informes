@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Technology Stack
 - **Frontend**: React 19 + Vite, Professional Dark Theme CSS
-- **Backend**: Node.js + Express 5, SQLite3 database
+- **Backend**: Node.js + Express 5, SQL.js database (WebAssembly SQLite)
+- **Database**: Migrated from sqlite3 to sql.js for cross-platform ARM64 compatibility
 - **File Handling**: Multer for uploads, jsPDF for PDF generation
 - **Navigation**: Client-centric SPA with mobile-first design
 
@@ -28,9 +29,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Testing
 No test framework is currently configured. If adding tests, check existing patterns first.
 
-## Database Schema (SQLite)
+## Database Schema (SQL.js - WebAssembly SQLite)
 
 ### Enhanced Schema with Professional Features
+**Note**: Successfully migrated from native sqlite3 to sql.js for ARM64/Termux compatibility while maintaining full functionality.
 - **clientes**: Customer information with industry type validation, contact details, and analytics
 - **proyectos**: Projects with enhanced status tracking (unstarted, in_progress, completed, delivered, invoiced), priorities, deadlines, and budget management
 - **recursos**: Project resources (photos, audio, text notes) with file paths and transcription support
@@ -140,22 +142,28 @@ No test framework is currently configured. If adding tests, check existing patte
 
 ## Recently Implemented ✅
 
-### Major Features (Latest Implementation)
-1. ✅ **Client-Centric Navigation**: Complete UX restructure around client workflows
-2. ✅ **Professional Dark Theme**: Comprehensive design system with CSS custom properties
-3. ✅ **Enhanced Project Status**: 5-level status workflow with kanban organization
-4. ✅ **Analytics Dashboard**: Business metrics with client portfolio insights
-5. ✅ **Reminder System**: Full featured scheduling with priorities and types
-6. ✅ **Mobile-First Design**: Complete responsive redesign with progressive disclosure
-7. ✅ **Multi-Photo Upload**: Enhanced photo uploader with camera functionality
-8. ✅ **Professional Icons**: Complete replacement of emojis with SVG icons
+### Major Features (Latest Implementation - December 2024)
+1. ✅ **Cross-Platform Database Migration**: Successfully migrated from sqlite3 to sql.js for ARM64 compatibility
+2. ✅ **Camera Functionality Fix**: Resolved mobile camera black screen issue with proper video constraints
+3. ✅ **Enhanced Mobile Navigation**: Improved touch targets, animations, and user feedback
+4. ✅ **Mobile UX Optimization**: Form improvements, touch interactions, and responsive enhancements
+5. ✅ **Client-Centric Navigation**: Complete UX restructure around client workflows
+6. ✅ **Professional Dark Theme**: Comprehensive design system with CSS custom properties
+7. ✅ **Enhanced Project Status**: 5-level status workflow with kanban organization
+8. ✅ **Analytics Dashboard**: Business metrics with client portfolio insights
+9. ✅ **Reminder System**: Full featured scheduling with priorities and types
+10. ✅ **Mobile-First Design**: Complete responsive redesign with progressive disclosure
+11. ✅ **Multi-Photo Upload**: Enhanced photo uploader with camera functionality
+12. ✅ **Professional Icons**: Complete replacement of emojis with SVG icons
 
 ### Technical Improvements
-1. ✅ **Database Schema**: Enhanced with priorities, deadlines, and reminder management
-2. ✅ **API Endpoints**: Comprehensive stats and analytics endpoints
-3. ✅ **Component Architecture**: Modern React patterns with proper state management
-4. ✅ **CSS Architecture**: Professional design system with mobile-first approach
-5. ✅ **File Management**: Improved upload handling and cleanup processes
+1. ✅ **Cross-Platform Database**: Successfully migrated from sqlite3 to sql.js for ARM64/Termux compatibility
+2. ✅ **Database Schema**: Enhanced with priorities, deadlines, and reminder management
+3. ✅ **API Endpoints**: Comprehensive stats and analytics endpoints
+4. ✅ **Mobile Camera Integration**: Fixed black screen issue with proper MediaDevices API implementation
+5. ✅ **CSS Architecture**: Enhanced mobile-first design with improved touch interactions
+6. ✅ **Component Architecture**: Modern React patterns with proper state management
+7. ✅ **File Management**: Improved upload handling and cleanup processes
 
 ## Current Status & Limitations
 
@@ -226,6 +234,13 @@ The project started as a basic CRUD application for security system installation
 - **Touch Optimization**: 44px minimum touch targets, larger buttons
 - **Layout Simplification**: Kanban → List view transition, reduced cognitive load
 - **Content Prioritization**: Show only essential information on mobile
+
+#### Phase 4: Camera & Mobile UX Fixes (Latest - December 2024)
+- **Camera Black Screen Fix**: Resolved mobile camera functionality with proper video constraints
+- **Enhanced Mobile Navigation**: Improved touch targets, smooth animations, backdrop-filter effects
+- **Mobile Form Optimization**: 16px font-size to prevent iOS zoom, better input styling
+- **Touch Interactions**: Added scale animations, removed tap highlights, improved user feedback
+- **Cross-Platform Compatibility**: Migrated from sqlite3 to sql.js for ARM64 compatibility
 
 ### Technical Architecture Evolution
 
