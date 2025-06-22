@@ -6,6 +6,7 @@ class Database {
   constructor() {
     this.dbPath = path.join(__dirname, 'informes.db');
     this.db = null;
+    this.isReady = false;
     this.init();
   }
 
@@ -80,9 +81,17 @@ class Database {
 
       this.db.exec(createTables);
       this.saveDatabase();
+      this.isReady = true;
       console.log('Base de datos inicializada correctamente');
     } catch (error) {
       console.error('Error inicializando base de datos:', error);
+    }
+  }
+
+
+  async waitForReady() {
+    while (!this.isReady) {
+      await new Promise(resolve => setTimeout(resolve, 10));
     }
   }
 
@@ -94,17 +103,18 @@ class Database {
   }
 
   // CRUD Clientes
-  getClientes() {
+  async getClientes() {
     try {
+      await this.waitForReady();
       const stmt = this.db.prepare('SELECT * FROM clientes ORDER BY nombre');
       const rows = [];
       while (stmt.step()) {
         rows.push(stmt.getAsObject());
       }
       stmt.free();
-      return Promise.resolve(rows);
+      return rows;
     } catch (error) {
-      return Promise.reject(error);
+      throw error;
     }
   }
 
