@@ -7,6 +7,7 @@ function Proyectos({ onVerProyecto }) {
   const [clientes, setClientes] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [cargando, setCargando] = useState(true)
+  const [editandoProyecto, setEditandoProyecto] = useState(null)
   const [nuevoProyecto, setNuevoProyecto] = useState({
     cliente_id: '',
     nombre: '',
@@ -15,6 +16,7 @@ function Proyectos({ onVerProyecto }) {
     tipo_instalacion: '',
     fecha_inicio: '',
     fecha_fin: '',
+    estado: 'en_progreso',
     presupuesto: ''
   })
 
@@ -44,8 +46,14 @@ function Proyectos({ onVerProyecto }) {
   const guardarProyecto = async (e) => {
     e.preventDefault()
     try {
-      const response = await fetch(`${API_URL}/proyectos`, {
-        method: 'POST',
+      const url = editandoProyecto 
+        ? `${API_URL}/proyectos/${editandoProyecto.id}`
+        : `${API_URL}/proyectos`
+      
+      const method = editandoProyecto ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...nuevoProyecto,
@@ -56,21 +64,69 @@ function Proyectos({ onVerProyecto }) {
       
       if (response.ok) {
         await cargarDatos()
-        setMostrarFormulario(false)
-        setNuevoProyecto({
-          cliente_id: '',
-          nombre: '',
-          descripcion: '',
-          ubicacion: '',
-          tipo_instalacion: '',
-          fecha_inicio: '',
-          fecha_fin: '',
-          presupuesto: ''
-        })
+        cerrarFormulario()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error guardando proyecto')
       }
     } catch (error) {
       console.error('Error guardando proyecto:', error)
+      alert('Error guardando proyecto')
     }
+  }
+
+  const editarProyecto = (proyecto) => {
+    setEditandoProyecto(proyecto)
+    setNuevoProyecto({
+      cliente_id: proyecto.cliente_id?.toString() || '',
+      nombre: proyecto.nombre || '',
+      descripcion: proyecto.descripcion || '',
+      ubicacion: proyecto.ubicacion || '',
+      tipo_instalacion: proyecto.tipo_instalacion || '',
+      fecha_inicio: proyecto.fecha_inicio || '',
+      fecha_fin: proyecto.fecha_fin || '',
+      estado: proyecto.estado || 'en_progreso',
+      presupuesto: proyecto.presupuesto?.toString() || ''
+    })
+    setMostrarFormulario(true)
+  }
+
+  const eliminarProyecto = async (proyecto) => {
+    if (!confirm(`¿Estás seguro de eliminar el proyecto "${proyecto.nombre}"? Esto también eliminará todos sus recursos.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/proyectos/${proyecto.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await cargarDatos()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error eliminando proyecto')
+      }
+    } catch (error) {
+      console.error('Error eliminando proyecto:', error)
+      alert('Error eliminando proyecto')
+    }
+  }
+
+  const cerrarFormulario = () => {
+    setMostrarFormulario(false)
+    setEditandoProyecto(null)
+    setNuevoProyecto({
+      cliente_id: '',
+      nombre: '',
+      descripcion: '',
+      ubicacion: '',
+      tipo_instalacion: '',
+      fecha_inicio: '',
+      fecha_fin: '',
+      estado: 'en_progreso',
+      presupuesto: ''
+    })
   }
 
   const handleChange = (e) => {
@@ -120,7 +176,7 @@ function Proyectos({ onVerProyecto }) {
       {mostrarFormulario && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Nuevo Proyecto</h3>
+            <h3>{editandoProyecto ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h3>
             <form onSubmit={guardarProyecto}>
               <div className="form-grid">
                 <div className="form-group">
@@ -213,14 +269,29 @@ function Proyectos({ onVerProyecto }) {
                     placeholder="0.00"
                   />
                 </div>
+
+                {editandoProyecto && (
+                  <div className="form-group">
+                    <label>Estado</label>
+                    <select
+                      name="estado"
+                      value={nuevoProyecto.estado}
+                      onChange={handleChange}
+                    >
+                      <option value="en_progreso">En Progreso</option>
+                      <option value="completado">Completado</option>
+                      <option value="facturado">Facturado</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setMostrarFormulario(false)}>
+                <button type="button" className="btn btn-secondary" onClick={cerrarFormulario}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Crear Proyecto
+                  {editandoProyecto ? 'Actualizar Proyecto' : 'Crear Proyecto'}
                 </button>
               </div>
             </form>
@@ -274,6 +345,20 @@ function Proyectos({ onVerProyecto }) {
                     onClick={() => onVerProyecto('proyecto-detalle', proyecto)}
                   >
                     Ver Detalles
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-edit" 
+                    onClick={() => editarProyecto(proyecto)}
+                    title="Editar proyecto"
+                  >
+                    ✏️
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-delete" 
+                    onClick={() => eliminarProyecto(proyecto)}
+                    title="Eliminar proyecto"
+                  >
+                    🗑️
                   </button>
                 </div>
               </div>

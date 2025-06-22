@@ -1,14 +1,22 @@
 # App de Gestión de Informes
 
-Una aplicación web simple para gestionar proyectos de instalación de sistemas de seguridad y generar informes automáticamente.
+Una aplicación web completa para gestionar proyectos de instalación de sistemas de seguridad y generar informes automáticamente.
 
-## Descripción
+## Estado Actual ✅
 
-Esta aplicación ayuda a empresas de redes y seguridad a:
-- Gestionar clientes e información de contacto
-- Organizar proyectos/trabajos por cliente
-- Almacenar recursos (fotos, notas de voz, notas de texto)
-- Generar informes en PDF automáticamente
+La aplicación está **completamente funcional** con las siguientes características implementadas:
+
+### Funcionalidades Principales
+- ✅ **Gestión Completa de Clientes**: Crear, editar, eliminar y visualizar clientes con información de contacto completa
+- ✅ **Gestión Completa de Proyectos**: Crear, editar, eliminar proyectos vinculados a clientes con seguimiento de estado
+- ✅ **Gestión de Recursos**: Subir fotos, grabar audio, crear notas de texto y eliminar recursos
+- ✅ **Generación de PDF**: Informes automáticos con imágenes embebidas y todos los datos del proyecto
+- ✅ **Interfaz Intuitiva**: Navegación simple con funciones completas de CRUD
+
+### Recursos Soportados
+- 📸 **Fotos**: Subida con drag-and-drop, vista previa y descripción
+- 🎤 **Audio**: Grabación directa desde navegador con reproducción
+- 📝 **Notas de Texto**: Creación y almacenamiento de observaciones
 
 ## Arquitectura
 
@@ -69,9 +77,21 @@ El proyecto está diseñado para ser:
 - **Funcional:** Enfocado en resolver el problema específico
 - **Escalable:** Preparado para futuras mejoras (transcripción, etc.)
 
-## Funcionalidades Futuras
+## Limitaciones Conocidas ⚠️
 
-- Transcripción automática de notas de voz
-- Plantillas de informes personalizables
-- Backup y sincronización
-- Búsqueda avanzada
+- **Sin Transcripción**: Los audios se almacenan pero no se transcriben automáticamente
+
+## Funcionalidades Futuras 🚀
+
+### Próximas Mejoras
+- 🎯 **Transcripción de Audio**: Conversión automática de voz a texto
+- 🔍 **Búsqueda y Filtros**: Localización rápida de información
+- 📊 **Dashboard**: Estadísticas y resumen de proyectos
+- 🔄 **Actualización de Estado**: Cambio rápido de estados de proyectos
+- 📝 **Plantillas de Notas**: Plantillas predefinidas para notas comunes
+
+### Futuras Expansiones
+- 🔐 **Sistema de Usuarios**: Autenticación y roles
+- 📱 **App Móvil**: Versión nativa para trabajo de campo
+- ☁️ **Backup en la Nube**: Sincronización y respaldo automático
+- 🎨 **Plantillas Personalizables**: Informes con branding empresarial

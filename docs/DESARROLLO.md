@@ -47,20 +47,42 @@ app-informes/
 - `descripcion`: Descripción del recurso
 - `transcripcion`: Texto transcrito (para audios)
 
-## API Endpoints
+## API Endpoints ✅ Implementados
 
 ### Clientes
-- `GET /api/clientes` - Lista todos los clientes
-- `POST /api/clientes` - Crear nuevo cliente
+- `GET /api/clientes` - Lista todos los clientes ✅
+- `POST /api/clientes` - Crear nuevo cliente ✅
 
 ### Proyectos
-- `GET /api/proyectos` - Lista todos los proyectos con info del cliente
-- `GET /api/proyectos/:id` - Obtener proyecto específico
-- `POST /api/proyectos` - Crear nuevo proyecto
+- `GET /api/proyectos` - Lista todos los proyectos con info del cliente ✅
+- `GET /api/proyectos/:id` - Obtener proyecto específico ✅
+- `POST /api/proyectos` - Crear nuevo proyecto ✅
 
 ### Recursos
-- `GET /api/proyectos/:id/recursos` - Lista recursos de un proyecto
-- `POST /api/proyectos/:id/recursos` - Agregar recurso a proyecto
+- `GET /api/proyectos/:id/recursos` - Lista recursos de un proyecto ✅
+- `POST /api/proyectos/:id/recursos` - Agregar recurso (nota de texto) a proyecto ✅
+- `POST /api/proyectos/:id/upload` - Subir archivos (fotos/audio) con multer ✅
+
+### Sistema
+- `GET /api/health` - Endpoint de salud del servidor ✅
+- `GET /uploads/*` - Servir archivos estáticos (fotos/audios) ✅
+
+### CRUD Completo ✅
+- `PUT /api/clientes/:id` - Actualizar cliente ✅
+- `DELETE /api/clientes/:id` - Eliminar cliente ✅
+- `PUT /api/proyectos/:id` - Actualizar proyecto ✅
+- `DELETE /api/proyectos/:id` - Eliminar proyecto ✅  
+- `DELETE /api/recursos/:id` - Eliminar recurso ✅
+
+## Endpoints Pendientes ⚠️
+
+### Búsqueda y Filtros
+- `GET /api/clientes/search?q=...` - Buscar clientes ❌
+- `GET /api/proyectos/filter?estado=...` - Filtrar proyectos ❌
+
+### Funcionalidades Avanzadas
+- `POST /api/transcripcion` - Transcribir audio ❌
+- `GET /api/estadisticas` - Dashboard con métricas ❌
 
 ## Comandos de Desarrollo
 
@@ -86,9 +108,29 @@ npm run build   # Construye para producción
 4. **Validación**: Validar datos en backend antes de guardar
 5. **Consistencia**: Mantener estilo de código uniforme
 
-## Próximas Funcionalidades
+## Estado de Implementación
 
-- Subida de archivos con multer
-- Grabación de audio con MediaRecorder API
-- Transcripción con Whisper.cpp
-- Generación de PDF con jsPDF
+### ✅ Completado
+- ✅ Subida de archivos con multer (fotos y audios)
+- ✅ Grabación de audio con MediaRecorder API
+- ✅ Generación de PDF con jsPDF e imágenes embebidas
+- ✅ Interface completa para gestión de clientes y proyectos
+- ✅ Visualización de recursos por proyecto
+- ✅ Base de datos SQLite con estructura completa
+- ✅ **CRUD Completo**: Crear, editar y eliminar clientes, proyectos y recursos
+- ✅ **Limpieza de archivos**: Eliminación automática de archivos al borrar recursos
+- ✅ **Validaciones**: Prevención de eliminaciones que afecten integridad de datos
+
+### 🔧 Funcionalidades Parciales
+- 🔧 **Audio**: Se graba y almacena, pero no hay transcripción automática
+
+### ❌ Pendientes de Alta Prioridad
+- ❌ **Transcripción de audio**: Los audios se graban pero no se transcriben automáticamente
+
+### 🚀 Mejoras Futuras
+- Transcripción automática con Whisper.cpp o servicios cloud
+- Sistema de búsqueda y filtros avanzados  
+- Dashboard con estadísticas
+- Sistema de usuarios y autenticación
+- Backup y sincronización
+- App móvil para trabajo de campo

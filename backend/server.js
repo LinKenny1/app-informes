@@ -75,12 +75,49 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
+app.get('/api/clientes/stats', async (req, res) => {
+  try {
+    const clientesWithStats = await db.getClientesWithStats();
+    res.json(clientesWithStats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/clientes', async (req, res) => {
   try {
     const cliente = await db.createCliente(req.body);
     res.status(201).json(cliente);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/clientes/:id', async (req, res) => {
+  try {
+    const cliente = await db.updateCliente(req.params.id, req.body);
+    res.json(cliente);
+  } catch (error) {
+    if (error.message === 'Cliente no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+app.delete('/api/clientes/:id', async (req, res) => {
+  try {
+    const result = await db.deleteCliente(req.params.id);
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Cliente no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else if (error.message.includes('proyectos asociados')) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -115,6 +152,39 @@ app.post('/api/proyectos', async (req, res) => {
   }
 });
 
+app.put('/api/proyectos/:id', async (req, res) => {
+  try {
+    const proyecto = await db.updateProyecto(req.params.id, req.body);
+    res.json(proyecto);
+  } catch (error) {
+    if (error.message === 'Proyecto no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+app.delete('/api/proyectos/:id', async (req, res) => {
+  try {
+    const result = await db.deleteProyecto(req.params.id);
+    
+    // Clean up uploaded files directory
+    const uploadPath = path.join(__dirname, '../uploads', req.params.id);
+    if (fs.existsSync(uploadPath)) {
+      fs.rmSync(uploadPath, { recursive: true, force: true });
+    }
+    
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Proyecto no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
 // Rutas de recursos
 app.get('/api/proyectos/:id/recursos', async (req, res) => {
   try {
@@ -131,6 +201,28 @@ app.post('/api/proyectos/:id/recursos', async (req, res) => {
     res.status(201).json(recurso);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/recursos/:id', async (req, res) => {
+  try {
+    const result = await db.deleteRecurso(req.params.id);
+    
+    // Clean up uploaded file if it exists
+    if (result.archivo_path) {
+      const filePath = path.join(__dirname, '../uploads', result.archivo_path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Recurso no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -167,6 +259,66 @@ app.post('/api/proyectos/:id/upload', upload.single('file'), async (req, res) =>
     if (req.file) {
       fs.unlink(req.file.path, () => {});
     }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rutas de recordatorios
+app.get('/api/recordatorios', async (req, res) => {
+  try {
+    const filtros = {};
+    if (req.query.estado) filtros.estado = req.query.estado;
+    if (req.query.proyecto_id) filtros.proyecto_id = req.query.proyecto_id;
+    if (req.query.cliente_id) filtros.cliente_id = req.query.cliente_id;
+    
+    const recordatorios = await db.getRecordatorios(filtros);
+    res.json(recordatorios);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/recordatorios', async (req, res) => {
+  try {
+    const recordatorio = await db.createRecordatorio(req.body);
+    res.status(201).json(recordatorio);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/recordatorios/:id', async (req, res) => {
+  try {
+    const recordatorio = await db.updateRecordatorio(req.params.id, req.body);
+    res.json(recordatorio);
+  } catch (error) {
+    if (error.message === 'Recordatorio no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+app.delete('/api/recordatorios/:id', async (req, res) => {
+  try {
+    const result = await db.deleteRecordatorio(req.params.id);
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Recordatorio no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+// Ruta para estadísticas del dashboard
+app.get('/api/dashboard', async (req, res) => {
+  try {
+    const stats = await db.getDashboardStats();
+    res.json(stats);
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
