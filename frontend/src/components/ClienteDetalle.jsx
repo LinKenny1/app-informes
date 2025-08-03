@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-
-const API_URL = 'http://localhost:3001/api'
+import { API_URL } from '../utils/api'
 
 function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
   const [proyectos, setProyectos] = useState([])
@@ -19,10 +18,21 @@ function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
     estado: 'unstarted',
     presupuesto: ''
   })
+  const [editandoProyecto, setEditandoProyecto] = useState(null)
+  const [editingStatus, setEditingStatus] = useState(null)
 
   useEffect(() => {
     cargarProyectos()
   }, [cliente.id])
+
+  const getIndustryLabel = (tipo) => {
+    const labels = {
+      'office': 'Oficina',
+      'mall': 'Mall',
+      'industry': 'Industria'
+    }
+    return labels[tipo] || tipo
+  }
 
   const cargarProyectos = async () => {
     try {
@@ -117,6 +127,61 @@ function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
     }).format(amount)
   }
 
+  const cambiarEstadoProyecto = async (proyectoId, nuevoEstado) => {
+    try {
+      const proyecto = proyectos.find(p => p.id === proyectoId)
+      if (!proyecto) {
+        alert('Proyecto no encontrado')
+        return
+      }
+      
+      const response = await fetch(`${API_URL}/proyectos/${proyectoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...proyecto,
+          estado: nuevoEstado 
+        })
+      })
+      
+      if (response.ok) {
+        await cargarProyectos()
+        setEditingStatus(null)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error actualizando estado')
+      }
+    } catch (error) {
+      console.error('Error actualizando estado:', error)
+      alert('Error actualizando estado')
+    }
+  }
+
+  const editarProyecto = async (proyectoId, datosEditados) => {
+    try {
+      const response = await fetch(`${API_URL}/proyectos/${proyectoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...datosEditados,
+          cliente_id: cliente.id,
+          presupuesto: datosEditados.presupuesto ? parseFloat(datosEditados.presupuesto) : null
+        })
+      })
+      
+      if (response.ok) {
+        await cargarProyectos()
+        setEditandoProyecto(null)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error actualizando proyecto')
+      }
+    } catch (error) {
+      console.error('Error actualizando proyecto:', error)
+      alert('Error actualizando proyecto')
+    }
+  }
+
   // Agrupar proyectos por estado
   const proyectosPorEstado = {
     unstarted: proyectos.filter(p => p.estado === 'unstarted'),
@@ -142,7 +207,7 @@ function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
           <h1>{cliente.nombre}</h1>
           <div className="cliente-meta">
             <span className={`badge badge-${cliente.tipo_industria}`}>
-              {cliente.tipo_industria}
+              {getIndustryLabel(cliente.tipo_industria)}
             </span>
             {cliente.total_proyectos && (
               <span className="text-secondary">
@@ -233,40 +298,100 @@ function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
           </div>
         ) : (
           <>
-            {/* Mobile: Simple list view */}
+            {/* Mobile: Grouped by status view */}
             <div className="proyectos-mobile-list">
-              {proyectos.map(proyecto => {
-                const statusInfo = getStatusInfo(proyecto.estado)
-                const priorityInfo = getPriorityInfo(proyecto.prioridad)
+              {Object.entries(proyectosPorEstado).map(([estado, proyectosEstado]) => {
+                const statusInfo = getStatusInfo(estado)
+                if (proyectosEstado.length === 0) return null
+                
                 return (
-                  <div 
-                    key={proyecto.id} 
-                    className="proyecto-card-mobile"
-                    onClick={() => onVerProyecto(proyecto)}
-                  >
-                    <div className="proyecto-mobile-header">
-                      <h4>{proyecto.nombre}</h4>
-                      <div className="proyecto-badges">
-                        <div className={`badge badge-${statusInfo.class}`}>
-                          {statusInfo.label}
-                        </div>
-                        <div className={`badge badge-${priorityInfo.class}`}>
-                          {priorityInfo.label}
-                        </div>
-                      </div>
+                  <div key={estado} className="mobile-status-group">
+                    <div className="mobile-status-header">
+                      <div className={`status-dot status-dot-${estado}`}></div>
+                      <h3>{statusInfo.label}</h3>
+                      <span className="count">{proyectosEstado.length}</span>
                     </div>
                     
-                    {proyecto.descripcion && (
-                      <p className="proyecto-mobile-descripcion">{proyecto.descripcion}</p>
-                    )}
-                    
-                    {proyecto.fecha_limite && (
-                      <div className="proyecto-mobile-meta">
-                        <span className="text-sm text-muted">
-                          Fecha límite: {formatDate(proyecto.fecha_limite)}
-                        </span>
-                      </div>
-                    )}
+                    <div className="mobile-status-projects">
+                      {proyectosEstado.map(proyecto => {
+                        const priorityInfo = getPriorityInfo(proyecto.prioridad)
+                        return (
+                          <div key={proyecto.id} className="proyecto-card-mobile">
+                            <div className="proyecto-mobile-header">
+                              <h4 onClick={() => onVerProyecto(proyecto)}>{proyecto.nombre}</h4>
+                              <div className="proyecto-actions">
+                                <button 
+                                  className="btn-icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEditingStatus(editingStatus === proyecto.id ? null : proyecto.id)
+                                  }}
+                                  title="Cambiar estado"
+                                >
+                                  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                  </svg>
+                                </button>
+                                <button 
+                                  className="btn-icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEditandoProyecto(proyecto)
+                                  }}
+                                  title="Editar proyecto"
+                                >
+                                  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M12 20h9"/>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="proyecto-mobile-content">
+                              <div className="proyecto-badges">
+                                <div className={`badge badge-${priorityInfo.class}`}>
+                                  {priorityInfo.label}
+                                </div>
+                              </div>
+                              
+                              {proyecto.descripcion && (
+                                <p className="proyecto-mobile-descripcion">{proyecto.descripcion}</p>
+                              )}
+                              
+                              {proyecto.fecha_limite && (
+                                <div className="proyecto-mobile-meta">
+                                  <span className="text-sm text-muted">
+                                    Fecha límite: {formatDate(proyecto.fecha_limite)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {editingStatus === proyecto.id && (
+                              <div className="status-quick-edit">
+                                <h5>Cambiar estado:</h5>
+                                <div className="status-options">
+                                  {['unstarted', 'in_progress', 'completed', 'delivered', 'invoiced'].map(estado => {
+                                    const statusInfo = getStatusInfo(estado)
+                                    return (
+                                      <button
+                                        key={estado}
+                                        className={`btn btn-sm ${proyecto.estado === estado ? 'btn-primary' : 'btn-secondary'}`}
+                                        onClick={() => cambiarEstadoProyecto(proyecto.id, estado)}
+                                      >
+                                        {statusInfo.label}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 )
               })}
@@ -288,23 +413,47 @@ function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
                       {proyectosEstado.map(proyecto => {
                         const priorityInfo = getPriorityInfo(proyecto.prioridad)
                         return (
-                          <div 
-                            key={proyecto.id} 
-                            className="proyecto-card"
-                            onClick={() => onVerProyecto(proyecto)}
-                          >
+                          <div key={proyecto.id} className="proyecto-card">
                             <div className="proyecto-card-header">
-                              <h4>{proyecto.nombre}</h4>
-                              <div className={`badge badge-${priorityInfo.class}`}>
-                                {priorityInfo.label}
+                              <h4 onClick={() => onVerProyecto(proyecto)}>{proyecto.nombre}</h4>
+                              <div className="proyecto-card-actions">
+                                <div className={`badge badge-${priorityInfo.class}`}>
+                                  {priorityInfo.label}
+                                </div>
+                                <button 
+                                  className="btn-icon btn-icon-sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEditingStatus(editingStatus === proyecto.id ? null : proyecto.id)
+                                  }}
+                                  title="Cambiar estado"
+                                >
+                                  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                  </svg>
+                                </button>
+                                <button 
+                                  className="btn-icon btn-icon-sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEditandoProyecto(proyecto)
+                                  }}
+                                  title="Editar proyecto"
+                                >
+                                  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M12 20h9"/>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                  </svg>
+                                </button>
                               </div>
                             </div>
                             
                             {proyecto.descripcion && (
-                              <p className="proyecto-descripcion">{proyecto.descripcion}</p>
+                              <p className="proyecto-descripcion" onClick={() => onVerProyecto(proyecto)}>{proyecto.descripcion}</p>
                             )}
                             
-                            <div className="proyecto-meta">
+                            <div className="proyecto-meta" onClick={() => onVerProyecto(proyecto)}>
                               {proyecto.fecha_limite && (
                                 <span className="text-sm text-muted">
                                   Límite: {formatDate(proyecto.fecha_limite)}
@@ -316,6 +465,26 @@ function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
                                 </span>
                               )}
                             </div>
+                            
+                            {editingStatus === proyecto.id && (
+                              <div className="status-quick-edit">
+                                <h5>Cambiar estado:</h5>
+                                <div className="status-options">
+                                  {['unstarted', 'in_progress', 'completed', 'delivered', 'invoiced'].map(estado => {
+                                    const statusInfo = getStatusInfo(estado)
+                                    return (
+                                      <button
+                                        key={estado}
+                                        className={`btn btn-sm ${proyecto.estado === estado ? 'btn-primary' : 'btn-secondary'}`}
+                                        onClick={() => cambiarEstadoProyecto(proyecto.id, estado)}
+                                      >
+                                        {statusInfo.label}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )
                       })}
@@ -327,6 +496,168 @@ function ClienteDetalle({ cliente, onVolver, onVerProyecto }) {
           </>
         )}
       </div>
+
+      {/* Modal para editar proyecto */}
+      {editandoProyecto && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="card">
+              <div className="card-header">
+                <h3>Editar Proyecto: {editandoProyecto.nombre}</h3>
+              </div>
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.target)
+                const datos = {
+                  nombre: formData.get('nombre'),
+                  descripcion: formData.get('descripcion'),
+                  ubicacion: formData.get('ubicacion'),
+                  tipo_instalacion: formData.get('tipo_instalacion'),
+                  fecha_inicio: formData.get('fecha_inicio'),
+                  fecha_fin: formData.get('fecha_fin'),
+                  fecha_limite: formData.get('fecha_limite'),
+                  prioridad: formData.get('prioridad'),
+                  estado: formData.get('estado'),
+                  presupuesto: formData.get('presupuesto')
+                }
+                editarProyecto(editandoProyecto.id, datos)
+              }}>
+                <div className="card-body">
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label className="form-label">Nombre del Proyecto *</label>
+                      <input
+                        type="text"
+                        name="nombre"
+                        defaultValue={editandoProyecto.nombre}
+                        className="form-input"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Estado</label>
+                      <select
+                        name="estado"
+                        defaultValue={editandoProyecto.estado}
+                        className="form-select"
+                      >
+                        <option value="unstarted">Sin iniciar</option>
+                        <option value="in_progress">En progreso</option>
+                        <option value="completed">Completado</option>
+                        <option value="delivered">Entregado</option>
+                        <option value="invoiced">Facturado</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Prioridad</label>
+                      <select
+                        name="prioridad"
+                        defaultValue={editandoProyecto.prioridad}
+                        className="form-select"
+                      >
+                        <option value="low">Baja</option>
+                        <option value="medium">Media</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Tipo de Instalación</label>
+                      <input
+                        type="text"
+                        name="tipo_instalacion"
+                        defaultValue={editandoProyecto.tipo_instalacion || ''}
+                        className="form-input"
+                        placeholder="ej: CCTV, Control de Acceso"
+                      />
+                    </div>
+
+                    <div className="form-group form-group-full">
+                      <label className="form-label">Descripción</label>
+                      <textarea
+                        name="descripcion"
+                        defaultValue={editandoProyecto.descripcion || ''}
+                        className="form-textarea"
+                        rows="3"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Ubicación</label>
+                      <input
+                        type="text"
+                        name="ubicacion"
+                        defaultValue={editandoProyecto.ubicacion || ''}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Fecha de Inicio</label>
+                      <input
+                        type="date"
+                        name="fecha_inicio"
+                        defaultValue={editandoProyecto.fecha_inicio || ''}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Fecha de Fin</label>
+                      <input
+                        type="date"
+                        name="fecha_fin"
+                        defaultValue={editandoProyecto.fecha_fin || ''}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Fecha Límite</label>
+                      <input
+                        type="date"
+                        name="fecha_limite"
+                        defaultValue={editandoProyecto.fecha_limite || ''}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Presupuesto</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        name="presupuesto"
+                        defaultValue={editandoProyecto.presupuesto || ''}
+                        className="form-input"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card-footer">
+                  <div className="form-actions">
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      onClick={() => setEditandoProyecto(null)}
+                    >
+                      Cancelar
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      Guardar Cambios
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal para nuevo proyecto */}
       {mostrarFormProyecto && (

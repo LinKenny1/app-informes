@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-
-const API_URL = 'http://localhost:3001/api'
+import { API_URL } from '../utils/api'
 
 function Proyectos({ onVerProyecto }) {
   const [proyectos, setProyectos] = useState([])

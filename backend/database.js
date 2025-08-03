@@ -17,7 +17,7 @@ class Database {
         telefono TEXT,
         email TEXT,
         direccion TEXT,
-        tipo_industria TEXT CHECK(tipo_industria IN ('mall', 'oficina', 'industria')),
+        tipo_industria TEXT CHECK(tipo_industria IN ('mall', 'office', 'industry')),
         notas_generales TEXT,
         fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
       );
@@ -44,7 +44,7 @@ class Database {
       CREATE TABLE IF NOT EXISTS recursos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         proyecto_id INTEGER NOT NULL,
-        tipo TEXT NOT NULL CHECK(tipo IN ('foto', 'audio', 'nota_texto')),
+        tipo TEXT NOT NULL CHECK(tipo IN ('photo', 'audio', 'text_note')),
         archivo_path TEXT,
         descripcion TEXT,
         transcripcion TEXT,
@@ -203,10 +203,25 @@ class Database {
          tipo_instalacion = ?, fecha_inicio = ?, fecha_fin = ?, fecha_limite = ?, prioridad = ?, estado = ?, presupuesto = ? 
          WHERE id = ?`,
         [cliente_id, nombre, descripcion, ubicacion, tipo_instalacion, fecha_inicio, fecha_fin, fecha_limite, prioridad, estado, presupuesto, id],
-        function(err) {
-          if (err) reject(err);
-          else if (this.changes === 0) reject(new Error('Proyecto no encontrado'));
-          else resolve({ id: parseInt(id), ...proyecto });
+        (err) => {
+          if (err) {
+            reject(err);
+          } else if (this.changes === 0) {
+            reject(new Error('Proyecto no encontrado'));
+          } else {
+            // Return the updated project with cliente information
+            const sql = `
+              SELECT p.*, c.nombre as cliente_nombre, c.contacto, c.telefono 
+              FROM proyectos p 
+              JOIN clientes c ON p.cliente_id = c.id 
+              WHERE p.id = ?
+            `;
+            
+            this.db.get(sql, [id], (err, row) => {
+              if (err) reject(err);
+              else resolve(row);
+            });
+          }
         }
       );
     });
@@ -255,6 +270,19 @@ class Database {
         (err, rows) => {
           if (err) reject(err);
           else resolve(rows);
+        }
+      );
+    });
+  }
+
+  getRecurso(id) {
+    return new Promise((resolve, reject) => {
+      this.db.get(
+        'SELECT * FROM recursos WHERE id = ?',
+        [id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
         }
       );
     });
@@ -437,6 +465,21 @@ class Database {
       Promise.all(promises)
         .then(() => resolve(results))
         .catch(reject);
+    });
+  }
+
+  // Update transcription for a resource
+  updateRecursoTranscripcion(id, transcripcion) {
+    return new Promise((resolve, reject) => {
+      this.db.run(
+        'UPDATE recursos SET transcripcion = ? WHERE id = ?',
+        [transcripcion, id],
+        function(err) {
+          if (err) reject(err);
+          else if (this.changes === 0) reject(new Error('Recurso no encontrado'));
+          else resolve({ id: parseInt(id), transcripcion });
+        }
+      );
     });
   }
 

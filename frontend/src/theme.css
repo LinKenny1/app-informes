@@ -46,13 +46,13 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   
-  /* Spacing Scale */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
+  /* Spacing Scale - Compact */
+  --space-xs: 0.125rem;
+  --space-sm: 0.25rem;
+  --space-md: 0.5rem;
+  --space-lg: 0.75rem;
+  --space-xl: 1rem;
+  --space-2xl: 1.5rem;
   
   /* Border Radius */
   --radius-sm: 0.25rem;
@@ -102,7 +102,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -181,7 +181,7 @@ body {
 }
 
 .btn-lg {
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
   font-size: var(--text-lg);
 }
 
@@ -201,17 +201,17 @@ body {
 }
 
 .card-header {
-  padding: var(--space-lg);
+  padding: var(--space-md);
   border-bottom: 1px solid var(--border-primary);
   background-color: var(--bg-secondary);
 }
 
 .card-body {
-  padding: var(--space-lg);
+  padding: var(--space-md);
 }
 
 .card-footer {
-  padding: var(--space-lg);
+  padding: var(--space-md);
   border-top: 1px solid var(--border-primary);
   background-color: var(--bg-secondary);
 }
@@ -288,7 +288,7 @@ body {
 
 /* Form Styles */
 .form-group {
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
 }
 
 .form-label {
@@ -303,7 +303,7 @@ body {
 .form-textarea,
 .form-select {
   width: 100%;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
@@ -335,7 +335,7 @@ body {
 }
 
 .status-dot-unstarted { background-color: var(--status-unstarted); }
-.status-dot-in-progress { background-color: var(--status-in-progress); }
+.status-dot-in_progress { background-color: var(--status-in-progress); }
 .status-dot-completed { background-color: var(--status-completed); }
 .status-dot-delivered { background-color: var(--status-delivered); }
 .status-dot-invoiced { background-color: var(--status-invoiced); }
@@ -379,7 +379,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2xl);
+  padding: var(--space-xl);
   color: var(--text-secondary);
 }
 
@@ -445,7 +445,7 @@ body {
   }
   
   .btn {
-    padding: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
     min-width: 44px;
     min-height: 44px;
   }

@@ -42,6 +42,61 @@ function App() {
     }
   }
 
+  const actualizarProyecto = (proyectoActualizado) => {
+    setProyectoSeleccionado(proyectoActualizado)
+  }
+
+  const renderNavButton = (view, label, icon, isActive) => (
+    <button 
+      key={view}
+      className={isActive ? 'nav-btn active' : 'nav-btn'}
+      onClick={() => navegarA(view)}
+    >
+      {icon}
+      {label}
+    </button>
+  )
+
+  const navigationItems = [
+    {
+      view: 'dashboard',
+      label: 'Dashboard',
+      icon: (
+        <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      ),
+      isActive: vistaActual === 'dashboard'
+    },
+    {
+      view: 'clientes',
+      label: 'Clientes',
+      icon: (
+        <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
+      isActive: vistaActual === 'clientes' || vistaActual === 'cliente-detalle'
+    },
+    {
+      view: 'recordatorios',
+      label: 'Recordatorios',
+      icon: (
+        <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12,6 12,12 16,14"/>
+        </svg>
+      ),
+      isActive: vistaActual === 'recordatorios'
+    }
+  ]
+
   return (
     <div className="app">
       <header className="app-header">
@@ -50,45 +105,20 @@ function App() {
           <span className="header-subtitle">Gestión Profesional de Proyectos</span>
         </div>
         
+        {/* Desktop Navigation */}
         <nav className="nav">
-          <button 
-            className={vistaActual === 'dashboard' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => navegarA('dashboard')}
-          >
-            <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <rect x="3" y="3" width="7" height="7"/>
-              <rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/>
-            </svg>
-            Dashboard
-          </button>
-          
-          <button 
-            className={vistaActual === 'clientes' || vistaActual === 'cliente-detalle' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => navegarA('clientes')}
-          >
-            <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            Clientes
-          </button>
-          
-          <button 
-            className={vistaActual === 'recordatorios' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => navegarA('recordatorios')}
-          >
-            <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12,6 12,12 16,14"/>
-            </svg>
-            Recordatorios
-          </button>
+          {navigationItems.map(item => 
+            renderNavButton(item.view, item.label, item.icon, item.isActive)
+          )}
         </nav>
       </header>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="nav nav-mobile">
+        {navigationItems.map(item => 
+          renderNavButton(item.view, item.label, item.icon, item.isActive)
+        )}
+      </nav>
 
       <main className="app-main">
         {vistaActual === 'dashboard' && (
@@ -111,6 +141,7 @@ function App() {
           <ProyectoDetalle 
             proyecto={proyectoSeleccionado} 
             onVolver={volverAClienteDetalle}
+            onProyectoActualizado={actualizarProyecto}
           />
         )}
         

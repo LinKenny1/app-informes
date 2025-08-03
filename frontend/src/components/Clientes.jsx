@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-
-const API_URL = 'http://localhost:3001/api'
+import { API_URL } from '../utils/api'
 
 function Clientes({ onVerCliente }) {
   const [clientes, setClientes] = useState([])
@@ -13,13 +12,22 @@ function Clientes({ onVerCliente }) {
     telefono: '',
     email: '',
     direccion: '',
-    tipo_industria: 'oficina',
+    tipo_industria: 'office',
     notas_generales: ''
   })
 
   useEffect(() => {
     cargarClientes()
   }, [])
+
+  const getIndustryLabel = (tipo) => {
+    const labels = {
+      'office': 'Oficina',
+      'mall': 'Mall',
+      'industry': 'Industria'
+    }
+    return labels[tipo] || tipo
+  }
 
   const cargarClientes = async () => {
     try {
@@ -69,7 +77,7 @@ function Clientes({ onVerCliente }) {
       telefono: cliente.telefono || '',
       email: cliente.email || '',
       direccion: cliente.direccion || '',
-      tipo_industria: cliente.tipo_industria || 'oficina',
+      tipo_industria: cliente.tipo_industria || 'office',
       notas_generales: cliente.notas_generales || ''
     })
     setMostrarFormulario(true)
@@ -106,7 +114,7 @@ function Clientes({ onVerCliente }) {
       telefono: '',
       email: '',
       direccion: '',
-      tipo_industria: 'oficina',
+      tipo_industria: 'office',
       notas_generales: ''
     })
   }
@@ -230,9 +238,9 @@ function Clientes({ onVerCliente }) {
                     value={nuevoCliente.tipo_industria}
                     onChange={handleChange}
                   >
-                    <option value="oficina">Oficina</option>
+                    <option value="office">Oficina</option>
                     <option value="mall">Mall</option>
-                    <option value="industria">Industria</option>
+                    <option value="industry">Industria</option>
                   </select>
                 </div>
 
@@ -301,7 +309,7 @@ function Clientes({ onVerCliente }) {
                   </div>
                 </div>
                 <span className={`badge badge-${cliente.tipo_industria}`}>
-                  {cliente.tipo_industria}
+                  {getIndustryLabel(cliente.tipo_industria)}
                 </span>
               </div>
               

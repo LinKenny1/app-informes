@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf'
+import { API_URL } from './api'
 
 export const generarInformePDF = async (proyecto, recursos) => {
   const doc = new jsPDF()
@@ -184,7 +185,7 @@ export const generarInformePDF = async (proyecto, recursos) => {
         
         try {
           // Construir URL completa de la imagen
-          const imageUrl = `http://localhost:3001/uploads/${foto.archivo_path}`
+          const imageUrl = `${API_URL.replace('/api', '')}/uploads/${foto.archivo_path}`
           const { dataURL, width, height } = await loadImageAsBase64(imageUrl)
           
           // Calcular dimensiones para el PDF (convertir de px a mm)

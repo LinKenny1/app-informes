@@ -24,9 +24,9 @@ function InformePreview({ proyecto, recursos, onClose }) {
   }
 
   const contarRecursos = () => {
-    const fotos = recursos.filter(r => r.tipo === 'foto').length
+    const fotos = recursos.filter(r => r.tipo === 'photo').length
     const audios = recursos.filter(r => r.tipo === 'audio').length
-    const notas = recursos.filter(r => r.tipo === 'nota_texto').length
+    const notas = recursos.filter(r => r.tipo === 'text_note').length
     return { fotos, audios, notas }
   }
 
