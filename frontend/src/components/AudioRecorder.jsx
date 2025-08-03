@@ -12,6 +12,11 @@ function AudioRecorder({ onSave, onCancel }) {
 
   const startRecording = async () => {
     try {
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('getUserMedia not supported in this browser')
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       
       mediaRecorderRef.current = new MediaRecorder(stream)

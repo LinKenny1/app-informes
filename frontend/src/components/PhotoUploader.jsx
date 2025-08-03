@@ -71,15 +71,48 @@ function PhotoUploader({ onSave, onCancel }) {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } // Prefer back camera
-      })
+      console.log('Starting camera...')
+      
+      // Try with back camera first, fallback to any camera
+      let stream;
+      try {
+        console.log('Trying back camera...')
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' }
+        })
+        console.log('Back camera stream obtained:', stream)
+      } catch (backCameraError) {
+        console.log('Back camera not available, trying any camera...', backCameraError)
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true
+        })
+        console.log('Any camera stream obtained:', stream)
+      }
+      
       setCameraStream(stream)
       setShowCamera(true)
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
+      // Wait for video element to be rendered, then assign stream
+      setTimeout(() => {
+        if (videoRef.current && stream) {
+          console.log('Assigning stream to video element...')
+          videoRef.current.srcObject = stream
+          
+          // Force video to play
+          videoRef.current.onloadedmetadata = () => {
+            console.log('Video metadata loaded, playing...')
+            videoRef.current.play().catch(e => {
+              console.error('Error playing video:', e)
+            })
+          }
+        } else {
+          console.error('Video ref or stream not available:', { 
+            videoRef: videoRef.current, 
+            stream 
+          })
+        }
+      }, 100)
+      
     } catch (error) {
       console.error('Error accessing camera:', error)
       alert('No se pudo acceder a la cámara. Verifica los permisos.')
@@ -140,7 +173,11 @@ function PhotoUploader({ onSave, onCancel }) {
   }
 
   const openFileDialog = () => {
-    fileInputRef.current?.click()
+    // Reset the input value so the same files can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+      fileInputRef.current.click()
+    }
   }
 
   return (
@@ -157,7 +194,15 @@ function PhotoUploader({ onSave, onCancel }) {
               ref={videoRef} 
               autoPlay 
               playsInline 
+              muted
               className="camera-video"
+              style={{
+                width: '100%',
+                maxWidth: '400px',
+                height: 'auto',
+                backgroundColor: '#000',
+                borderRadius: '8px'
+              }}
             />
             <canvas ref={canvasRef} style={{ display: 'none' }} />
             
@@ -210,6 +255,9 @@ function PhotoUploader({ onSave, onCancel }) {
               <button className="btn btn-outline" onClick={startCamera}>
                 📸 Usar Cámara
               </button>
+              <p className="camera-hint">
+                Asegúrate de permitir el acceso a la cámara cuando tu navegador lo solicite
+              </p>
             </div>
           </div>
         ) : (
@@ -255,6 +303,14 @@ function PhotoUploader({ onSave, onCancel }) {
               <button className="btn btn-outline btn-sm" onClick={startCamera}>
                 📸 Tomar otra foto
               </button>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+                id="additional-files"
+              />
             </div>
           </div>
         )}
