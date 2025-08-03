@@ -9,21 +9,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture
 
 ### Technology Stack
-- **Frontend**: React 19 + Vite, Professional Dark Theme CSS
-- **Backend**: Node.js + Express 5, SQLite3 database
+- **Frontend**: React 19 + Vite, Professional Dark Theme CSS, HTTPS-enabled
+- **Backend**: Node.js + Express 5, SQLite3 database, HTTPS server
 - **File Handling**: Multer for uploads, jsPDF for PDF generation
 - **Navigation**: Client-centric SPA with mobile-first design
+- **Security**: Self-signed SSL certificates for development, HTTPS required for camera/microphone access
 
 ## Development Commands
 
+### Quick Start (HTTPS)
+- `./start-https.sh` - Start both frontend and backend servers with HTTPS configuration
+
 ### Backend (from `/backend`)
-- `npm run dev` - Start development server with nodemon (port 3001)
+- `npm run dev` - Start HTTPS development server with nodemon (port 3001)
 - `npm start` - Start production server
 
 ### Frontend (from `/frontend`) 
-- `npm run dev` - Start Vite development server (port 5173)
+- `npm run dev` - Start HTTPS Vite development server (port 5173)
 - `npm run build` - Build for production
 - `npm run lint` - Run ESLint
+
+### Access URLs
+- **Local development**: https://localhost:5173
+- **Network access**: https://[DEVICE_IP]:5173 (e.g., https://192.168.1.15:5173)
+- **Backend API**: https://localhost:3001/api
 
 ### Testing
 No test framework is currently configured. If adding tests, check existing patterns first.
@@ -149,6 +158,8 @@ No test framework is currently configured. If adding tests, check existing patte
 6. ✅ **Mobile-First Design**: Complete responsive redesign with progressive disclosure
 7. ✅ **Multi-Photo Upload**: Enhanced photo uploader with camera functionality
 8. ✅ **Professional Icons**: Complete replacement of emojis with SVG icons
+9. ✅ **HTTPS Implementation**: Complete SSL setup for frontend and backend
+10. ✅ **Camera/Microphone Access**: Enhanced mobile device compatibility with proper HTTPS support
 
 ### Technical Improvements
 1. ✅ **Database Schema**: Enhanced with priorities, deadlines, and reminder management
@@ -156,6 +167,9 @@ No test framework is currently configured. If adding tests, check existing patte
 3. ✅ **Component Architecture**: Modern React patterns with proper state management
 4. ✅ **CSS Architecture**: Professional design system with mobile-first approach
 5. ✅ **File Management**: Improved upload handling and cleanup processes
+6. ✅ **HTTPS Infrastructure**: Self-signed SSL certificates and secure server configuration
+7. ✅ **Dynamic API Routing**: Automatic API URL detection for localhost vs network access
+8. ✅ **Audio Transcription Ready**: Backend infrastructure prepared for audio transcription integration
 
 ## Current Status & Limitations
 
@@ -226,6 +240,14 @@ The project started as a basic CRUD application for security system installation
 - **Touch Optimization**: 44px minimum touch targets, larger buttons
 - **Layout Simplification**: Kanban → List view transition, reduced cognitive load
 - **Content Prioritization**: Show only essential information on mobile
+
+#### Phase 4: HTTPS Implementation & Camera/Microphone Enhancement
+- **HTTPS Infrastructure**: Complete SSL implementation for both frontend and backend
+- **Self-Signed Certificates**: Development-ready SSL certificates for localhost and network access
+- **Camera API Improvements**: Enhanced fallback logic and error handling for mobile camera access
+- **Microphone Access**: Fixed getUserMedia compatibility issues for mobile devices
+- **API URL Detection**: Dynamic API URL routing based on access method (localhost vs IP)
+- **Development Tooling**: Added start-https.sh script for easy HTTPS development setup
 
 ### Technical Architecture Evolution
 

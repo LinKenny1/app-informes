@@ -14,8 +14,8 @@ La aplicación está **completamente funcional** con las siguientes característ
 - ✅ **Interfaz Intuitiva**: Navegación simple con funciones completas de CRUD
 
 ### Recursos Soportados
-- 📸 **Fotos**: Subida con drag-and-drop, vista previa y descripción
-- 🎤 **Audio**: Grabación directa desde navegador con reproducción
+- 📸 **Fotos**: Subida con drag-and-drop, vista previa, descripción y captura con cámara
+- 🎤 **Audio**: Grabación directa desde navegador con reproducción (preparado para transcripción)
 - 📝 **Notas de Texto**: Creación y almacenamiento de observaciones
 
 ## Arquitectura
@@ -39,19 +39,37 @@ app-informes/
 
 ## Instalación
 
-### Backend
+### Método Rápido (HTTPS)
+```bash
+# Script automático que inicia ambos servidores con HTTPS
+./start-https.sh
+```
+
+### Instalación Manual
+
+#### Backend (HTTPS)
 ```bash
 cd backend
 npm install
-npm run dev
+npm run dev  # Inicia servidor HTTPS en puerto 3001
 ```
 
-### Frontend
+#### Frontend (HTTPS)
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev  # Inicia servidor HTTPS en puerto 5173
 ```
+
+### Acceso a la Aplicación
+- **Local:** https://localhost:5173
+- **Red Local:** https://[IP_DEL_DISPOSITIVO]:5173
+- **Ejemplo:** https://192.168.1.15:5173
+
+**⚠️ Importante:** 
+- La aplicación ahora usa HTTPS por defecto para soportar cámara y micrófono en dispositivos móviles
+- Acepta las advertencias de certificado en tu navegador (desarrollo con certificados auto-firmados)
+- Para usar cámara/micrófono desde dispositivos móviles, debe accederse vía HTTPS
 
 ## Estructura de Datos
 
@@ -79,7 +97,8 @@ El proyecto está diseñado para ser:
 
 ## Limitaciones Conocidas ⚠️
 
-- **Sin Transcripción**: Los audios se almacenan pero no se transcriben automáticamente
+- **Transcripción Pendiente**: Los audios se almacenan con infraestructura lista para transcripción automática
+- **Certificados de Desarrollo**: Usa certificados auto-firmados (para producción se necesitan certificados SSL válidos)
 
 ## Funcionalidades Futuras 🚀
 
