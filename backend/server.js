@@ -1,20 +1,52 @@
 const express = require('express');
+const https = require('https');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const Database = require('./database');
+const TranscriptionService = require('./transcriptionService');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// HTTPS Configuration
+const httpsOptions = {
+  key: fs.readFileSync(path.join(__dirname, '../certs/key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '../certs/cert.pem'))
+};
+
+// Configure CORS to allow HTTPS frontend to connect to HTTPS backend
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true)
+    
+    // Allow localhost (both HTTP and HTTPS)
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true)
+    }
+    
+    // Allow any IP address on ports 5173 or 3000 (both HTTP and HTTPS)
+    if (origin.match(/^https?:\/\/\d+\.\d+\.\d+\.\d+:(5173|3000)$/)) {
+      return callback(null, true)
+    }
+    
+    callback(null, true) // Allow all for development
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Inicializar base de datos
+// Inicializar base de datos y servicio de transcripción
 const db = new Database();
+const transcriptionService = new TranscriptionService();
 
 // Configurar multer para subida de archivos
 const storage = multer.diskStorage({
@@ -238,7 +270,7 @@ app.post('/api/proyectos/:id/upload', upload.single('file'), async (req, res) =>
     
     // Determinar tipo de archivo
     const isImage = req.file.mimetype.startsWith('image/');
-    const tipo = isImage ? 'foto' : 'audio';
+    const tipo = isImage ? 'photo' : 'audio';
     
     // Ruta relativa para almacenar en BD
     const archivo_path = `${projectId}/${req.file.filename}`;
@@ -313,6 +345,55 @@ app.delete('/api/recordatorios/:id', async (req, res) => {
   }
 });
 
+// Ruta para transcribir audio
+app.post('/api/recursos/:id/transcribe', async (req, res) => {
+  try {
+    const recursoId = req.params.id;
+    
+    // Get resource info from database
+    const recurso = await db.getRecurso(recursoId);
+    
+    if (!recurso) {
+      return res.status(404).json({ error: 'Recurso no encontrado' });
+    }
+    
+    if (recurso.tipo !== 'audio') {
+      return res.status(400).json({ error: 'El recurso no es un archivo de audio' });
+    }
+    
+    if (recurso.transcripcion) {
+      return res.status(400).json({ error: 'Este audio ya ha sido transcrito' });
+    }
+    
+    const audioFilePath = path.join(__dirname, '../uploads', recurso.archivo_path);
+    
+    if (!fs.existsSync(audioFilePath)) {
+      return res.status(404).json({ error: 'Archivo de audio no encontrado' });
+    }
+    
+    // Start transcription
+    const result = await transcriptionService.transcribeAudio(audioFilePath);
+    
+    if (!result.success) {
+      return res.status(500).json({ error: result.error });
+    }
+    
+    // Update database with transcription
+    await db.updateRecursoTranscripcion(recursoId, result.text);
+    
+    res.json({
+      success: true,
+      transcripcion: result.text,
+      confidence: result.confidence,
+      audio_duration: result.audio_duration
+    });
+    
+  } catch (error) {
+    console.error('Transcription error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Ruta para estadísticas del dashboard
 app.get('/api/dashboard', async (req, res) => {
   try {
@@ -334,7 +415,8 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en puerto ${PORT}`);
-  console.log(`API disponible en http://localhost:${PORT}/api`);
+// Start HTTPS server
+https.createServer(httpsOptions, app).listen(PORT, () => {
+  console.log(`Servidor HTTPS ejecutándose en puerto ${PORT}`);
+  console.log(`API disponible en https://localhost:${PORT}/api`);
 });
